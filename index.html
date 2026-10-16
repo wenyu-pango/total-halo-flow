@@ -1,0 +1,1223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Total Halo Mobile Flow</title>
+<style>
+/* ============ REVIEW HARNESS ============
+   Layout: a control rail beside a scaled device stage, stacking to one column
+   on narrow screens. The harness deliberately stays plainer than anything it
+   frames — a polished frame around a wireframe collects feedback on the frame.
+   Neutrals carry a slight cool bias so the ground reads as chosen, not default.
+   The device keeps the Apple system stack because it is simulating iOS; the
+   harness uses it too rather than introducing a second voice. */
+:root{
+  --page-bg:#edeef1; --page-fg:#1a1b20; --page-mut:#5d6068;
+  --panel:#fff; --panel-line:#d9dbe0; --pill:#e4e6ea;
+  --z:1;                       /* device scale; shrinks below 480px */
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --page-bg:#121317; --page-fg:#e9eaee; --page-mut:#90939c;
+    --panel:#1c1d22; --panel-line:#2e3038; --pill:#292b32; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --page-bg:#121317; --page-fg:#e9eaee; --page-mut:#90939c;
+  --panel:#1c1d22; --panel-line:#2e3038; --pill:#292b32; color-scheme:dark;
+}
+html{height:100%}
+body{margin:0;min-height:100%;background:var(--page-bg);color:var(--page-fg);
+  font-family:var(--font);padding:24px 16px 40px}
+.page{max-width:742px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.intro{max-width:52ch;display:flex;flex-direction:column;gap:9px}
+.intro h1{margin:0;font-size:21px;font-weight:700;letter-spacing:-.2px;text-wrap:balance}
+.intro p{margin:0;font-size:14px;line-height:1.55;color:var(--page-mut)}
+.intro .flag{display:inline-flex;align-self:flex-start;gap:7px;align-items:center;
+  background:var(--pill);border-radius:999px;padding:5px 12px;font-size:12px;
+  font-weight:600;color:var(--page-fg)}
+.intro .flag::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--page-mut)}
+.layout{display:flex;gap:28px;align-items:flex-start}
+.stage{flex:0 0 auto;width:calc(var(--screen-w) * var(--z));
+  height:calc(var(--screen-h) * var(--z));margin:13px 13px 0}
+.stage .device{transform:scale(var(--z));transform-origin:top left}
+@media (max-width:447px){ :root{--z:.92} }
+@media (max-width:419px){ :root{--z:.87} }
+@media (max-width:398px){ :root{--z:.81} }
+@media (max-width:377px){ :root{--z:.76} }
+@media (max-width:356px){ :root{--z:.70} }
+@media (max-width:335px){ :root{--z:.60} }
+@media (max-width:860px){ .layout{flex-direction:column-reverse;align-items:center}
+  .intro{max-width:none} }
+.foot{font-size:12px;line-height:1.5;color:var(--page-mut);max-width:52ch}
+:where(button,[data-go],[data-pick],.cell):focus-visible{outline:2px solid #4b7bec;
+  outline-offset:2px}
+
+/* ============ TOKENS ============ */
+:root{
+  --screen-w:390px; --screen-h:844px;
+  --safe-top:44px; --safe-bottom:34px; --tabbar-h:49px; --navbar-h:44px;
+  --font:-apple-system,"SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --r-card:12px; --r-btn:12px; --tap:44px;
+  --dur:.32s; --ease:cubic-bezier(.32,.72,0,1);
+}
+/* Wireframe: no color, no depth, grey boxes. Text stays real. */
+:root{
+  --bg:#fff; --surface:#f2f2f2; --line:#d8d8d8;
+  --ink:#1c1c1e; --ink-2:#6b6b70; --ink-3:#9a9aa0;
+  --accent:#555; --accent-ink:#fff; --danger:#555;
+  --ok:#555; --warn:#555;
+  --block:#e4e4e6; --shadow:none; --chrome:#f7f7f7;
+}
+/* High fidelity: iOS system palette. */
+:root[data-fidelity="hi"]{
+  --bg:#fff; --surface:#f2f2f7; --line:#c6c6c8;
+  --ink:#000; --ink-2:#3c3c4399; --ink-3:#3c3c4360;
+  --accent:#6b2fd6; --accent-ink:#fff; --danger:#d92d20;
+  --ok:#067647; --warn:#b54708;
+  --block:#e5e5ea; --shadow:0 .5px 0 rgba(0,0,0,.18); --chrome:#f9f9f9f2;
+}
+@media (prefers-color-scheme:dark){
+  :root[data-fidelity="hi"]:not([data-theme="light"]){
+    --bg:#000; --surface:#1c1c1e; --line:#38383a;
+    --ink:#fff; --ink-2:#ebebf599; --ink-3:#ebebf560;
+    --block:#2c2c2e; --chrome:#1c1c1ef2;
+  }
+}
+:root[data-fidelity="hi"][data-theme="dark"]{
+  --bg:#000; --surface:#1c1c1e; --line:#38383a;
+  --ink:#fff; --ink-2:#ebebf599; --ink-3:#ebebf560;
+  --block:#2c2c2e; --chrome:#1c1c1ef2;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+/* body is styled by the review harness at the top of this file. */
+
+/* ============ DEVICE FRAME ============ */
+.device{width:var(--screen-w);height:var(--screen-h);background:var(--bg);
+  border-radius:48px;position:relative;overflow:hidden;
+  box-shadow:0 0 0 11px #1a1a1c,0 0 0 13px #2e2e32,0 24px 60px rgba(0,0,0,.45)}
+
+/* Status bar */
+.statusbar{position:absolute;inset:0 0 auto 0;height:var(--safe-top);z-index:30;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 32px 0;font-size:15px;font-weight:600;color:var(--ink);
+  letter-spacing:.2px;pointer-events:none}
+.statusbar .icons{display:flex;gap:5px;align-items:center}
+.statusbar i{display:block;background:var(--ink);border-radius:1px}
+.sig{width:17px;height:11px;-webkit-mask:repeating-linear-gradient(90deg,#000 0 3px,transparent 3px 4.5px);mask:repeating-linear-gradient(90deg,#000 0 3px,transparent 3px 4.5px)}
+.wifi{width:16px;height:11px;border-radius:0 0 8px 8px;background:var(--ink)}
+.bat{width:25px;height:12px;border:1.5px solid var(--ink);border-radius:3.5px;background:none;position:relative}
+.bat::after{content:"";position:absolute;inset:1.5px;width:62%;background:var(--ink);border-radius:1.5px}
+/* Dynamic Island */
+.island{position:absolute;top:11px;left:50%;transform:translateX(-50%);
+  width:124px;height:36px;background:#000;border-radius:20px;z-index:40}
+.home-ind{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+  width:139px;height:5px;border-radius:3px;background:var(--ink);opacity:.85;z-index:40}
+
+/* ============ SCREENS / ROUTER ============ */
+.screen{position:absolute;inset:0;background:var(--bg);display:none;
+  flex-direction:column;z-index:10}
+.screen.active{display:flex}
+.screen.push-in{animation:pushIn var(--dur) var(--ease)}
+.screen.pop-out{animation:popOut var(--dur) var(--ease);z-index:20}
+@keyframes pushIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+@keyframes popOut{from{transform:translateX(0)}to{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){.screen.push-in,.screen.pop-out,
+  .bub,.typing i,.inprog .ipic{animation:none}}
+
+/* Nav bar */
+.navbar{flex:0 0 auto;padding-top:var(--safe-top);background:var(--chrome);
+  backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--line)}
+.navbar .row{height:var(--navbar-h);display:flex;align-items:center;
+  justify-content:space-between;padding:0 8px}
+.navbar .title{font-size:17px;font-weight:600;color:var(--ink)}
+.navbar .large{font-size:34px;font-weight:700;color:var(--ink);
+  padding:0 16px 8px;letter-spacing:-.4px}
+.navbtn{min-width:var(--tap);min-height:var(--tap);display:flex;align-items:center;
+  gap:4px;background:none;border:0;color:var(--accent);font-size:17px;
+  font-family:inherit;padding:0 8px;cursor:pointer}
+.navbtn:active{opacity:.4}
+.chev-l{width:11px;height:11px;border-left:2.4px solid currentColor;
+  border-bottom:2.4px solid currentColor;transform:rotate(45deg);margin-left:4px}
+.chev-r{width:9px;height:9px;border-right:2.2px solid var(--ink-3);
+  border-top:2.2px solid var(--ink-3);transform:rotate(45deg);flex:0 0 auto}
+
+/* Scroll body */
+.body{flex:1 1 auto;overflow-y:auto;padding-bottom:calc(var(--tabbar-h) + var(--safe-bottom) + 16px)}
+.screen[data-nav="none"] .body{padding-bottom:calc(var(--safe-bottom) + 16px)}
+/* Screens without a nav bar must still clear the status bar, and must fill
+   their height so bottom-anchored CTAs sit at the bottom. */
+.screen[data-nav="none"] .body,
+.screen[data-nav="tabs"] .body{padding-top:var(--safe-top);display:flex;flex-direction:column}
+.screen[data-nav="tabs"] .body > *{flex:0 0 auto}
+
+/* ============ BLOCKS ============ */
+[data-block]{margin:0}
+[data-block="header"]{padding:16px;font-size:22px;font-weight:700;color:var(--ink)}
+[data-block="text"]{padding:4px 16px 16px;font-size:15px;line-height:1.45;color:var(--ink-2)}
+
+/* --- onboarding --- */
+.onb{flex:1 1 auto;display:flex;flex-direction:column;padding:0 24px;min-height:0}
+.onb .brand{display:flex;align-items:center;justify-content:center;gap:7px;
+  padding:14px 0 6px;font-size:13px;font-weight:600;letter-spacing:1.4px;color:var(--ink)}
+.onb .brand .ring{width:13px;height:13px;border:2px solid currentColor;border-radius:50%}
+.onb .art{flex:0 0 auto;height:210px;margin:18px 0 0;background:var(--block);
+  border-radius:10px;display:grid;place-items:center}
+.onb .art span{font-size:12px;color:var(--ink-3);letter-spacing:.4px;text-align:center;padding:0 24px}
+.onb h2{font-size:28px;line-height:1.2;font-weight:700;color:var(--ink);margin:28px 0 10px;letter-spacing:-.4px}
+.onb p{font-size:15px;line-height:1.5;color:var(--ink-2);margin:0}
+.onb .dots{display:flex;gap:7px;justify-content:center;padding:22px 0 10px;margin-top:auto}
+.onb .dots i{width:7px;height:7px;border-radius:50%;background:var(--block);display:block}
+.onb .dots i.on{background:var(--accent)}
+.onb .foot{padding-bottom:30px}
+.skip{position:absolute;top:calc(var(--safe-top) - 2px);right:10px;z-index:35;
+  background:none;border:0;font:15px var(--font);color:var(--ink-2);padding:8px;cursor:pointer}
+
+/* --- home --- */
+.halo-top{display:flex;align-items:center;justify-content:center;gap:7px;
+  padding:10px 0 2px;font-size:13px;font-weight:600;letter-spacing:1.4px;color:var(--ink)}
+.halo-top .ring{width:13px;height:13px;border:2px solid currentColor;border-radius:50%}
+.orb{margin:18px auto 0;width:188px;height:188px;border-radius:50%;
+  display:grid;place-items:center;position:relative}
+:root:not([data-fidelity="hi"]) .orb{border:1px dashed var(--line);background:var(--surface)}
+:root[data-fidelity="hi"] .orb{background:radial-gradient(circle at 50% 45%,#f3ecff,#fff 70%);
+  box-shadow:0 0 0 1px #ece2ff inset}
+.orb .inner{width:42px;height:42px;border:3px solid var(--accent);border-radius:50%}
+.orb .ask{position:absolute;bottom:26px;font-size:17px;font-weight:600;color:var(--ink)}
+.askbar{display:flex;align-items:center;gap:8px;margin:14px 16px 0;padding:9px 10px 9px 14px;
+  border:1px solid var(--line);border-radius:22px;background:var(--bg);min-height:var(--tap)}
+.askbar .ph{flex:1;font-size:14px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.askbar button{width:32px;height:32px;min-width:32px;border:0;border-radius:50%;background:var(--block);
+  color:var(--ink);font:600 17px var(--font);cursor:pointer;display:grid;place-items:center;padding:0}
+.askbar button.send{background:var(--accent);color:var(--accent-ink)}
+.askbar button:active{opacity:.7}
+.checkbtn{display:flex;align-items:center;justify-content:center;gap:10px;
+  margin:16px 16px 0;min-height:54px;width:calc(100% - 32px);border-radius:27px;
+  border:0;background:var(--accent);color:var(--accent-ink);
+  font:600 17px var(--font);cursor:pointer}
+.checkbtn:active{opacity:.82}
+.checkbtn .plus{font-size:22px;font-weight:400;line-height:1}
+:root:not([data-fidelity="hi"]) .checkbtn{background:var(--block);color:var(--ink);border:1px solid var(--line)}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:50;opacity:0;
+  pointer-events:none;transition:opacity .22s}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:8px;right:8px;bottom:calc(var(--safe-bottom) + 6px);z-index:51;
+  transform:translateY(120%);transition:transform .3s var(--ease)}
+.sheet.on{transform:translateY(0)}
+.sheet .grp{background:var(--chrome);border-radius:14px;overflow:hidden;margin-bottom:8px;
+  backdrop-filter:saturate(180%) blur(20px)}
+.sheet .grp .ttl{padding:13px 16px;font-size:13px;color:var(--ink-2);text-align:center;
+  border-bottom:.5px solid var(--line);line-height:1.35}
+.sheet button{display:block;width:100%;min-height:57px;border:0;background:none;
+  font:17px var(--font);color:var(--accent);cursor:pointer;border-bottom:.5px solid var(--line)}
+.sheet button:last-child{border-bottom:0}
+.sheet button:active{background:var(--surface)}
+.sheet .cancel button{font-weight:600;background:var(--bg)}
+/* --- iOS Photos app (context outside Halo) --- */
+.ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:2px}
+.ph-grid .cell{aspect-ratio:1;background:var(--block);cursor:pointer;position:relative}
+.ph-grid .cell.shot::after{content:"";position:absolute;inset:18% 26%;
+  border:1px solid rgba(0,0,0,.14);border-radius:2px}
+.ph-bar{position:absolute;left:0;right:0;bottom:0;height:calc(var(--tabbar-h) + var(--safe-bottom));
+  padding-bottom:var(--safe-bottom);background:var(--chrome);border-top:.5px solid var(--line);
+  display:flex;z-index:25;backdrop-filter:blur(20px)}
+.ph-detail{flex:1;display:flex;flex-direction:column;background:var(--bg)}
+.ph-detail .pic{flex:1;background:var(--block);margin:0;display:grid;place-items:center;
+  font-size:12px;color:var(--ink-3);text-align:center;padding:0 36px;line-height:1.5}
+.ph-tools{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+  padding:12px 26px calc(var(--safe-bottom) + 10px);background:var(--chrome);
+  border-top:.5px solid var(--line)}
+.ph-tools button{background:none;border:0;cursor:pointer;color:var(--accent);padding:8px;
+  min-width:var(--tap);min-height:var(--tap);display:grid;place-items:center}
+.ph-tools svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round}
+.ph-tools button.dim{color:var(--ink-2)}
+
+/* --- iOS share sheet --- */
+#sheet-share .grp{padding:0}
+.sh-head{display:flex;align-items:center;gap:11px;padding:14px;border-bottom:.5px solid var(--line)}
+.sh-head .th{width:44px;height:56px;background:var(--block);border-radius:5px;flex:0 0 auto}
+.sh-head .t1{font-size:15px;font-weight:600;color:var(--ink)}
+.sh-head .t2{font-size:12px;color:var(--ink-2);margin-top:1px}
+.sh-apps{display:flex;gap:18px;overflow-x:auto;padding:14px;border-bottom:.5px solid var(--line)}
+#sheet-share .sh-apps .sh-app{flex:0 0 auto;width:62px;background:none;border:0;cursor:pointer;
+  min-height:0;display:flex;flex-direction:column;align-items:center;gap:6px;padding:0;
+  border-bottom:0}
+#sheet-share .sh-app .tile{width:54px;height:54px;border-radius:13px;background:var(--block);
+  display:grid;place-items:center;font-size:9px;font-weight:700;letter-spacing:.3px;
+  color:var(--ink-2);text-align:center;line-height:1.1;padding:0 3px}
+#sheet-share .sh-app .nm{font-size:10px;color:var(--ink-2);line-height:1.2;text-align:center}
+#sheet-share .sh-app.halo .tile{border:2px solid var(--accent);color:var(--accent)}
+#sheet-share .sh-app.halo .nm{color:var(--ink);font-weight:600}
+.sh-rows button{display:flex!important;align-items:center;justify-content:space-between;
+  padding:0 16px;color:var(--ink);font-size:16px}
+.sh-rows button .gl{width:19px;height:19px;border-radius:4px;background:var(--block)}
+
+/* --- confirm (landed from a share) --- */
+.confirm{padding:4px 16px 0}
+.confirm .shots{display:flex;gap:9px;align-items:flex-start;margin:4px 0 16px}
+.confirm .shot{width:104px;height:138px;background:var(--block);border-radius:9px;flex:0 0 auto;
+  display:grid;place-items:center;font-size:10px;color:var(--ink-3);text-align:center;padding:0 8px;
+  line-height:1.4;position:relative}
+.confirm .addmore{width:104px;height:138px;border:1px dashed var(--line);border-radius:9px;
+  background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:5px;color:var(--ink-2);font:inherit;flex:0 0 auto}
+.confirm .addmore .p{font-size:22px;line-height:1}
+.confirm .addmore .l{font-size:11px}
+.confirm .note{display:flex;gap:9px;align-items:flex-start;margin:4px 0 0;padding:11px 12px;
+  border:1px solid var(--line);border-radius:10px}
+.confirm .note .gl{width:16px;height:16px;border-radius:4px;background:var(--block);flex:0 0 auto;margin-top:1px}
+.confirm .note p{margin:0;font-size:12px;line-height:1.45;color:var(--ink-2)}
+
+.cam{flex:1;display:flex;flex-direction:column;background:#111}
+/* Camera is a dark surface: the status bar must invert to stay legible */
+.device:has(#camera.active) .statusbar{--ink:#fff}
+.cam .view{flex:1;position:relative;display:grid;place-items:center}
+.cam .guides{position:absolute;inset:calc(var(--safe-top) + 52px) 22px 70px;border:2px dashed rgba(255,255,255,.5);border-radius:8px}
+.cam .hint{position:absolute;bottom:18px;left:22px;right:22px;text-align:center;
+  font-size:13px;line-height:1.4;color:#fff;opacity:.92}
+.cam .subject{font-size:12px;color:rgba(255,255,255,.55);text-align:center;padding:0 40px;line-height:1.5}
+.cam .bar{flex:0 0 auto;padding:18px 0 calc(var(--safe-bottom) + 14px);display:flex;
+  align-items:center;justify-content:center;background:#111}
+.cam .shutter{width:68px;height:68px;border-radius:50%;background:#fff;border:0;cursor:pointer;
+  box-shadow:0 0 0 4px #111,0 0 0 6px #fff}
+.cam .shutter:active{opacity:.75}
+.cam .close{position:absolute;top:calc(var(--safe-top) + 6px);left:14px;z-index:5;
+  background:none;border:0;color:#fff;font:17px var(--font);padding:8px;cursor:pointer}
+.counter{text-align:center;font-size:13px;color:var(--ink-2);padding:14px 16px 0}
+.suite{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:18px 16px 8px}
+.scard{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg);min-height:92px}
+.scard .top{display:flex;align-items:flex-start;justify-content:space-between}
+.scard .ico{width:26px;height:26px;border-radius:7px;background:var(--block)}
+.scard .pill{font-size:10px;font-weight:700;letter-spacing:.5px;border:1px solid var(--line);
+  border-radius:9px;padding:2px 7px;color:var(--ink-2)}
+.scard h4{margin:10px 0 2px;font-size:14px;font-weight:600;color:var(--ink)}
+.scard p{margin:0;font-size:11px;line-height:1.35;color:var(--ink-2)}
+
+/* --- attach --- */
+.paths{padding:4px 16px}
+.path{display:flex;align-items:center;gap:13px;width:100%;min-height:56px;padding:12px 14px;
+  border:1px solid var(--line);border-radius:12px;background:var(--bg);margin-bottom:10px;
+  font:inherit;text-align:left;cursor:pointer}
+.path:active{background:var(--surface)}
+.path .ico{width:34px;height:34px;border-radius:9px;background:var(--block);flex:0 0 auto}
+.path > span:last-child{display:block;flex:1;min-width:0}
+.path .t1{display:block;font-size:16px;color:var(--ink)}
+.path .t2{display:block;font-size:12px;color:var(--ink-2);margin-top:2px}
+
+/* --- gallery --- */
+.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:3px}
+.gal .cell{aspect-ratio:1;background:var(--block);position:relative;cursor:pointer}
+.gal .cell .tick{position:absolute;top:6px;left:6px;width:19px;height:19px;border-radius:50%;
+  border:1.6px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+.gal .cell[aria-selected="true"] .tick{background:var(--accent);border-color:#fff}
+.gal .cell[aria-selected="true"]::after{content:"";position:absolute;inset:0;box-shadow:0 0 0 3px var(--accent) inset}
+
+/* --- analyzing: narrated like a chat, because the wait is real --- */
+#analyzing .body{display:flex;flex-direction:column;padding-bottom:0;overflow:hidden}
+.chat{flex:1 1 auto;overflow-y:auto;display:flex;flex-direction:column;gap:11px;padding:16px 16px 10px}
+.chat > :first-child{margin-top:auto}
+.chat .sent{align-self:flex-end;width:94px;height:124px;background:var(--block);
+  border-radius:13px 13px 4px 13px;display:grid;place-items:center;text-align:center;
+  font-size:10px;line-height:1.35;color:var(--ink-3);padding:0 8px}
+.bub{align-self:flex-start;max-width:82%;background:var(--surface);border:1px solid var(--line);
+  border-radius:14px 14px 14px 4px;padding:10px 13px;font-size:14px;line-height:1.45;
+  color:var(--ink);display:flex;gap:9px;align-items:flex-start;animation:land .26s ease-out both}
+.bub[hidden]{display:none}
+.bub .tick{width:15px;height:15px;border-radius:50%;background:var(--accent);flex:0 0 auto;
+  margin-top:2px;position:relative;visibility:hidden}
+.bub .tick::after{content:"";position:absolute;left:4.5px;top:2.5px;width:4px;height:7px;
+  border-right:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(42deg)}
+.bub.past{color:var(--ink-2)}
+.bub.past .tick{visibility:visible}
+@keyframes land{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+.typing{align-self:flex-start;background:var(--surface);border:1px solid var(--line);
+  border-radius:14px 14px 14px 4px;padding:13px 15px;display:none;gap:5px;align-items:center}
+.typing.on{display:flex}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--ink-3);
+  animation:bob 1.2s ease-in-out infinite}
+.typing i:nth-child(2){animation-delay:.16s}
+.typing i:nth-child(3){animation-delay:.32s}
+@keyframes bob{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:.9;transform:translateY(-4px)}}
+.slowmsg{align-self:flex-start;font-size:13px;line-height:1.45;color:var(--ink-2);padding:2px 5px}
+.keepgo{flex:0 0 auto;display:flex;gap:10px;align-items:flex-start;
+  padding:13px 18px calc(13px + var(--safe-bottom));border-top:1px solid var(--line);
+  font-size:13px;line-height:1.45;color:var(--ink-2);opacity:0;transition:opacity .35s}
+.keepgo.on{opacity:1}
+.keepgo .ic{width:17px;height:17px;border-radius:50%;border:1.5px solid var(--ink-3);
+  flex:0 0 auto;margin-top:1px}
+
+/* --- home: a check still running has to be reachable from somewhere --- */
+.inprog{display:none;align-items:center;gap:11px;width:calc(100% - 32px);margin:12px 16px 0;
+  text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  padding:12px 13px;font-family:inherit;cursor:pointer}
+.inprog:active{opacity:.55}
+.inprog .ipic{width:30px;height:30px;border-radius:50%;flex:0 0 auto;
+  border:2px solid var(--line);border-top-color:var(--ink-2);animation:spin 1s linear infinite}
+.inprog[data-p="done"] .ipic{border-color:var(--accent);animation:none;position:relative}
+.inprog[data-p="done"] .ipic::after{content:"";position:absolute;left:9px;top:5px;width:7px;height:13px;
+  border-right:2.4px solid var(--accent);border-bottom:2.4px solid var(--accent);transform:rotate(42deg)}
+.inprog .t1{display:block;font-size:14px;font-weight:600;color:var(--ink)}
+.inprog .t2{display:block;font-size:12px;color:var(--ink-2);margin-top:2px}
+body[data-pending="run"]  #home .inprog[data-p="run"],
+body[data-pending="done"] #home .inprog[data-p="done"]{display:flex}
+
+/* --- result --- */
+.verdict{margin:14px 16px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.verdict .vhead{display:flex;align-items:center;gap:9px;padding:12px 14px;
+  border-bottom:1px solid var(--line);background:var(--surface)}
+.verdict .vdot{width:13px;height:13px;border-radius:50%;background:var(--ink-2);flex:0 0 auto}
+.verdict .vlabel{font-size:16px;font-weight:700;color:var(--ink)}
+.verdict[data-v="scam"] .vdot{background:var(--danger)}
+.verdict[data-v="suspicious"] .vdot{background:var(--warn)}
+.verdict[data-v="benign"] .vdot{background:var(--ok)}
+.verdict .upd{margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.5px;
+  text-transform:uppercase;color:var(--ink-2);border:1px solid var(--line);
+  border-radius:9px;padding:2px 7px;display:none}
+.verdict .upd.on{display:inline-block}
+.verdict .vbody{padding:13px 14px}
+.verdict h5{margin:0 0 7px;font-size:13px;font-weight:700;color:var(--ink);text-transform:uppercase;letter-spacing:.6px}
+.verdict ul{margin:0 0 15px;padding-left:17px}
+.verdict li{font-size:14px;line-height:1.5;color:var(--ink);margin-bottom:5px}
+.verdict .advice{font-size:14px;line-height:1.5;color:var(--ink);margin:0}
+.evidence{display:flex;gap:11px;align-items:center;margin:14px 16px 0;padding:10px;
+  border:1px solid var(--line);border-radius:10px}
+.evidence .th{width:38px;height:50px;background:var(--block);border-radius:5px;flex:0 0 auto}
+.evidence .t1{font-size:13px;color:var(--ink)}
+.evidence .t2{font-size:11px;color:var(--ink-2);margin-top:2px}
+.primer{margin:16px 16px 0;padding:14px;border:1px solid var(--line);border-radius:12px;
+  background:var(--surface)}
+.primer h5{margin:0 0 5px;font-size:13px;font-weight:700;color:var(--ink);
+  text-transform:uppercase;letter-spacing:.6px}
+.primer .lede{margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--ink)}
+.primer .leg{display:flex;flex-direction:column;gap:8px}
+.primer .leg div{display:flex;align-items:flex-start;gap:9px;font-size:13px;line-height:1.4;color:var(--ink-2)}
+.primer .leg b{color:var(--ink);font-weight:600}
+.primer .d{width:11px;height:11px;border-radius:50%;flex:0 0 auto;margin-top:3px;background:var(--ink-2)}
+.primer .d.r{background:var(--danger)} .primer .d.o{background:var(--warn)} .primer .d.g{background:var(--ok)}
+.askq{margin:14px 16px 0;padding:13px 14px;border:1px solid var(--line);border-radius:12px}
+.askq p{margin:0 0 11px;font-size:14px;line-height:1.45;color:var(--ink)}
+.askq .opts{display:flex;gap:8px}
+.askq .opts button{flex:1;min-height:40px;border:1px solid var(--line);border-radius:9px;
+  background:var(--bg);font:15px var(--font);color:var(--ink);cursor:pointer}
+.askq .opts button:active{background:var(--surface)}
+.askq .skip{position:static;display:block;margin:9px auto 0;color:var(--ink-2);font-size:13px}
+.askq .turn{font-size:11px;color:var(--ink-3);margin-bottom:8px;letter-spacing:.3px}
+.fb{margin:18px 16px 0;padding:12px 2px 0;border-top:1px solid var(--line)}
+.fb-ask{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.fb span{font-size:13px;color:var(--ink-2)}
+.fb .btns{display:flex;gap:8px}
+.fb .btns button{min-width:var(--tap);min-height:var(--tap);border:1px solid var(--line);
+  border-radius:10px;background:var(--bg);cursor:pointer;display:grid;place-items:center;padding:0 12px}
+.fb .btns button svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);stroke-width:1.6;
+  stroke-linejoin:round}
+.fb .btns button:active{background:var(--surface)}
+.fb .btns button[aria-pressed="true"]{border-color:var(--accent);background:var(--surface)}
+.fb .btns button[aria-pressed="true"] svg{stroke:var(--accent);fill:var(--accent);fill-opacity:.14}
+.fb .btns button[disabled]{opacity:.45;pointer-events:none}
+.fb-thanks{display:none;margin:0;padding:11px 0 2px;font-size:13px;line-height:1.45;color:var(--ink-2)}
+.fb-thanks.on{display:block}
+.fb.done .fb-ask span{color:var(--ink-3)}
+
+/* --- shared --- */
+[data-block="cta"]{padding:16px;margin-top:auto}
+.btn{width:100%;min-height:50px;border:0;border-radius:var(--r-btn);background:var(--accent);
+  color:var(--accent-ink);font-size:17px;font-weight:600;font-family:inherit;cursor:pointer}
+.btn:active{opacity:.8}
+.btn.ghost{background:none;color:var(--accent);border:1px solid var(--line)}
+[data-block="empty"]{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:10px;padding:48px 32px;text-align:center}
+[data-block="empty"] .glyph{width:56px;height:56px;border-radius:14px;background:var(--block)}
+[data-block="empty"] h3{margin:4px 0 0;font-size:19px;color:var(--ink)}
+[data-block="empty"] p{margin:0;font-size:15px;color:var(--ink-2);line-height:1.45}
+
+/* Tab bar */
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:calc(var(--tabbar-h) + var(--safe-bottom));
+  padding-bottom:var(--safe-bottom);background:var(--chrome);
+  backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--line);
+  display:flex;z-index:25}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;background:none;border:0;cursor:pointer;color:var(--ink-3);font-family:inherit}
+.tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+.tab span{font-size:10px;font-weight:500}
+.tab[aria-selected="true"]{color:var(--accent)}
+
+/* States */
+#result > .body > [data-res]{display:none}
+#result > .body > [data-res].on{display:block}
+[data-first-only]{display:none}
+body[data-first="1"] [data-first-only]{display:block}
+[data-state]{display:none}
+[data-state].on{display:block}
+[data-block="empty"][data-state].on{display:flex}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Dev toolbar */
+.devbar{flex:1 1 220px;min-width:0;max-width:260px;display:flex;flex-direction:column;
+  gap:6px;font:12px/1.3 var(--font);background:var(--panel);
+  border:1px solid var(--panel-line);border-radius:14px;padding:14px}
+.devbar .hd{font-size:13px;font-weight:700;color:var(--page-fg);margin-bottom:2px}
+.devbar .hd + span{font-size:12px;line-height:1.45;color:var(--page-mut);margin-bottom:6px}
+.devbar b{color:var(--page-mut);font-weight:600;text-transform:uppercase;
+  letter-spacing:.6px;margin-top:8px;font-size:10px}
+.devbar button{border:1px solid var(--panel-line);border-radius:8px;padding:7px 10px;
+  background:var(--panel);color:var(--page-fg);cursor:pointer;font:inherit;text-align:left;
+  min-height:32px}
+.devbar button:hover{background:var(--pill)}
+.devbar button[aria-pressed="true"]{background:var(--page-fg);color:var(--panel);
+  border-color:var(--page-fg)}
+@media (max-width:860px){.devbar{max-width:none;width:100%}}
+body[data-chrome="off"] .devbar{display:none}
+/* still=1 freezes animation so headless screenshots capture the settled state */
+body[data-still="1"] *{transition:none!important;animation:none!important}
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="intro">
+    <span class="flag">Wireframe · Gate 1</span>
+    <h1>Total Halo mobile flow</h1>
+    <p>A clickable walk-through of day-0 onboarding and the check loop: pick or
+      photograph a screenshot, watch it get checked, read the verdict. Tap
+      through it like an app — the back arrows and swipe-back work.</p>
+    <p><strong>This is unstyled on purpose.</strong> Grey boxes, no colour, no
+      icons, real copy. The question at this stage is whether the flow and the
+      order of screens are right, not how it looks. Styling comes after.</p>
+  </div>
+  <div class="layout">
+<div class="devbar">
+  <div class="hd">Jump to a state</div>
+  <span>Some states only happen rarely. Use these to reach them without hunting.</span>
+  <b>Fidelity</b>
+  <button data-fid="wire" aria-pressed="true">Wireframe</button>
+  <button data-fid="hi">Styled</button>
+  <b>Flow</b>
+  <button data-jump="onb1">A · Day 0</button>
+  <button data-jump="home">B · Home</button>
+  <button data-jump="photos">C · Photos (share)</button>
+  <b>Home state</b>
+  <button data-st="firstrun" aria-pressed="true">First run</button>
+  <button data-st="returning">Returning</button>
+  <button data-st="slow">Slow check</button>
+  <b>Check history</b>
+  <button data-first="1">First ever check</button>
+  <button data-first="0" aria-pressed="true">Has checked before</button>
+  <b>Clarification</b>
+  <button data-turn="0">Question 1</button>
+  <button data-turn="1">Question 2</button>
+  <button data-turn="2">Question 3</button>
+  <b>Result</b>
+  <button data-res="scam" aria-pressed="true">Scam (chat)</button>
+  <button data-res="suspicious">Suspicious (ad)</button>
+  <button data-res="benign">Benign</button>
+  <button data-res="unreadable">Unreadable</button>
+</div>
+
+<div class="stage">
+<div class="device">
+  <div class="island"></div>
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="icons"><i class="sig"></i><i class="wifi"></i><i class="bat"></i></span>
+  </div>
+
+  <!-- ============ FLOW C — SHARE-SHEET ENTRY (outside Halo) ============ -->
+  <section class="screen" id="photos" data-nav="tabs">
+    <div class="navbar">
+      <div class="row"><span class="title"></span><button class="navbtn" style="margin-left:auto">Select</button></div>
+      <div class="large">Library</div>
+    </div>
+    <div class="body">
+      <div class="ph-grid">
+        <div class="cell shot" data-go="photo-detail"></div>
+        <div class="cell shot" data-go="photo-detail"></div>
+        <div class="cell" data-go="photo-detail"></div>
+        <div class="cell shot" data-go="photo-detail"></div>
+        <div class="cell" data-go="photo-detail"></div>
+        <div class="cell shot" data-go="photo-detail"></div>
+        <div class="cell" data-go="photo-detail"></div>
+        <div class="cell shot" data-go="photo-detail"></div>
+        <div class="cell" data-go="photo-detail"></div>
+        <div class="cell shot" data-go="photo-detail"></div>
+        <div class="cell" data-go="photo-detail"></div>
+        <div class="cell shot" data-go="photo-detail"></div>
+      </div>
+    </div>
+    <nav class="ph-bar">
+      <button class="tab" aria-selected="true"><span>Library</span></button>
+      <button class="tab"><span>For You</span></button>
+      <button class="tab"><span>Albums</span></button>
+      <button class="tab"><span>Search</span></button>
+    </nav>
+  </section>
+
+  <section class="screen" id="photo-detail" data-nav="stack">
+    <div class="navbar"><div class="row">
+      <button class="navbtn" data-back><span class="chev-l"></span>Library</button>
+      <span class="title">Today</span><span style="width:76px"></span>
+    </div></div>
+    <div class="ph-detail">
+      <div class="pic">Screenshot</div>
+      <div class="ph-tools">
+        <button data-sheet="share" aria-label="Share">
+          <svg viewBox="0 0 24 24"><path d="M12 3.5v12"/><path d="M8 7.2 12 3.3l4 3.9"/><path d="M5.5 12.5V20h13v-7.5"/></svg>
+        </button>
+        <button class="dim" aria-label="Favourite"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z"/></svg></button>
+        <button class="dim" aria-label="Info"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8v.2"/></svg></button>
+        <button class="dim" aria-label="Delete"><svg viewBox="0 0 24 24"><path d="M5.5 7h13M9.5 7V5h5v2M7 7l.8 12.2h8.4L17 7"/></svg></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FLOW A — DAY 0 ============ -->
+  <section class="screen active" id="onb1" data-nav="none">
+    <button class="skip" data-go="home">Skip</button>
+    <div class="body"><div class="onb">
+      <div class="brand"><span class="ring"></span>TOTAL HALO</div>
+      <div class="art"><span>Phone with a magnifying glass over a message</span></div>
+      <h2>Spot scams in seconds</h2>
+      <p>Halo tells you instantly if a message, ad or website is a scam — and explains exactly why.</p>
+      <div class="dots"><i class="on"></i><i></i><i></i><i></i></div>
+      <div class="foot"><button class="btn" data-go="onb2">Next</button></div>
+    </div></div>
+  </section>
+
+  <section class="screen" id="onb2" data-nav="none">
+    <button class="skip" data-go="home">Skip</button>
+    <div class="body"><div class="onb">
+      <div class="brand"><span class="ring"></span>TOTAL HALO</div>
+      <div class="art"><span>Hand pressing the side and volume buttons to take a screenshot</span></div>
+      <h2>Simply take a screenshot</h2>
+      <p>Got a suspicious text, email or WhatsApp message? Screenshot it, then pick it in Halo. Checking for someone else? Photograph their screen instead.</p>
+      <div class="dots"><i></i><i class="on"></i><i></i><i></i></div>
+      <div class="foot"><button class="btn" data-go="onb3">Next</button></div>
+    </div></div>
+  </section>
+
+  <section class="screen" id="onb3" data-nav="none">
+    <button class="skip" data-go="home">Skip</button>
+    <div class="body"><div class="onb">
+      <div class="brand"><span class="ring"></span>TOTAL HALO</div>
+      <div class="art"><span>Four screenshots: an Instagram ad, a shop page, a WhatsApp chat, an email</span></div>
+      <h2>Ads, sites, chats and email</h2>
+      <p>Screenshot an ad you don't trust, the shop it opens, a message from an unknown number, or an email promising you money. Halo checks them all the same way.</p>
+      <div class="dots"><i></i><i></i><i class="on"></i><i></i></div>
+      <div class="foot"><button class="btn" data-go="onb4">Next</button></div>
+    </div></div>
+  </section>
+
+  <section class="screen" id="onb4" data-nav="none">
+    <div class="body"><div class="onb">
+      <div class="brand"><span class="ring"></span>TOTAL HALO</div>
+      <div class="art"><span>Result card: verdict, reasons, and what to do next</span></div>
+      <h2>Get answers you can act on</h2>
+      <p>Every check comes back with a clear verdict, the reasons behind it, and exactly what to do next.</p>
+      <div class="dots"><i></i><i></i><i></i><i class="on"></i></div>
+      <div class="foot"><button class="btn" data-go="home">Get Started</button></div>
+    </div></div>
+  </section>
+
+  <!-- ============ FLOW B — THE CHECK ============ -->
+  <section class="screen" id="home" data-nav="tabs">
+    <div class="body">
+      <div class="halo-top"><span class="ring"></span>TOTAL HALO</div>
+      <div class="orb"><div class="inner"></div><div class="ask">Is this risky?</div></div>
+      <button class="checkbtn" data-sheet="pick">
+        <span class="plus">+</span>
+        <span class="lbl">Check a screenshot or photo</span>
+      </button>
+      <button class="inprog" data-p="run" data-go="analyzing">
+        <span class="ipic"></span>
+        <span><span class="t1">Checking your screenshot…</span><span class="t2">Started a moment ago</span></span>
+        <span class="chev-r"></span>
+      </button>
+      <button class="inprog" data-p="done" data-go="result">
+        <span class="ipic"></span>
+        <span><span class="t1">Your check is ready</span><span class="t2">Tap to see the result</span></span>
+        <span class="chev-r"></span>
+      </button>
+      <div class="counter" data-state="returning">You've checked 7 things with Halo</div>
+      <div class="suite">
+        <div class="scard"><div class="top"><div class="ico"></div><span class="pill">ON</span></div>
+          <h4>WebShield</h4><p>Block scam websites</p></div>
+        <div class="scard"><div class="top"><div class="ico"></div></div>
+          <h4>Stop Scam Texts</h4><p>Protect yourself from SMS scams</p></div>
+        <div class="scard"><div class="top"><div class="ico"></div></div>
+          <h4>Stop Scam Alerts</h4><p>Scan for unwanted calendar alerts</p></div>
+        <div class="scard"><div class="top"><div class="ico"></div></div>
+          <h4>QR Check</h4><p>Protect against scam QR codes</p></div>
+      </div>
+    </div>
+    <nav class="tabbar">
+      <button class="tab" aria-selected="true" data-go="home">
+        <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/></svg><span>Home</span></button>
+      <button class="tab" data-go="home">
+        <svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg><span>Suite</span></button>
+      <button class="tab" data-go="home">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M4.5 4.5l1.9 1.9M17.6 17.6l1.9 1.9M2.8 12h2.6M18.6 12h2.6M4.5 19.5l1.9-1.9M17.6 6.4l1.9-1.9"/></svg><span>Settings</span></button>
+    </nav>
+  </section>
+
+  <section class="screen" id="camera" data-nav="stack">
+    <div class="cam">
+      <button class="close" data-back>Cancel</button>
+      <div class="view">
+        <div class="guides"></div>
+        <div class="subject">Camera viewfinder — pointed at a message on someone else's phone or monitor</div>
+        <div class="hint">Fill the frame with the message. Avoid glare and shoot straight on — angled photos are harder to read.</div>
+      </div>
+      <div class="bar"><button class="shutter" data-go="analyzing" aria-label="Take photo"></button></div>
+    </div>
+  </section>
+
+  <section class="screen" id="gallery" data-nav="stack">
+    <div class="navbar"><div class="row">
+      <button class="navbtn" data-back><span class="chev-l"></span>Back</button>
+      <span class="title">Pick a screenshot</span><span style="width:60px"></span>
+    </div></div>
+    <div class="body">
+      <div data-state="default" class="on">
+        <div data-block="text" style="padding:12px 16px 10px">An ad, the site it opens, a chat message, or an email — pick every screenshot in the conversation and Halo reads them together.</div>
+        <div class="gal">
+          <div class="cell" aria-selected="true" data-pick><div class="tick"></div></div>
+          <div class="cell" data-pick><div class="tick"></div></div>
+          <div class="cell" data-pick><div class="tick"></div></div>
+          <div class="cell" data-pick><div class="tick"></div></div>
+          <div class="cell" data-pick><div class="tick"></div></div>
+          <div class="cell" data-pick><div class="tick"></div></div>
+          <div class="cell" data-pick><div class="tick"></div></div>
+          <div class="cell" data-pick><div class="tick"></div></div>
+          <div class="cell" data-pick><div class="tick"></div></div>
+        </div>
+        <div data-block="text" style="padding-top:12px">Pick every screenshot in the conversation — Halo reads them together.</div>
+      </div>
+      <div data-block="empty" data-state="galempty">
+        <div class="glyph"></div>
+        <h3>No screenshots yet</h3>
+        <p>Screenshot the ad, site, message or email you're worried about, then come back here and pick it.</p>
+        <button class="btn ghost" style="max-width:210px" data-back>Back</button>
+      </div>
+    </div>
+    <div data-block="cta" data-state="default" class="on"><button class="btn" data-go="analyzing">Upload (1)</button></div>
+  </section>
+
+  <section class="screen" id="confirm" data-nav="stack">
+    <div class="navbar"><div class="row">
+      <button class="navbtn" data-go="photos">Cancel</button>
+      <span class="title">Check for scams</span><span style="width:76px"></span>
+    </div></div>
+    <div class="body">
+      <div data-block="header" style="padding-bottom:6px">Check this for scams?</div>
+      <div data-block="text" style="padding-bottom:10px">Total Halo will read what's in the screenshot and tell you whether it looks like a scam, why, and what to do.</div>
+      <div class="confirm">
+        <div class="shots">
+          <div class="shot">Shared screenshot</div>
+          <button class="addmore" data-go="gallery"><span class="p">+</span><span class="l">Add another</span></button>
+        </div>
+        <div data-block="text" style="padding:0 0 14px;font-size:13px">Sharing a conversation? Add every screenshot — Halo reads them together.</div>
+        <div class="note">
+          <span class="gl"></span>
+          <p>Your screenshot is sent to Total Halo to be analysed. We don't keep it after the check is done.</p>
+        </div>
+      </div>
+    </div>
+    <div data-block="cta"><button class="btn" data-go="analyzing">Check for scams</button></div>
+  </section>
+
+  <section class="screen" id="analyzing" data-nav="stack">
+    <div class="navbar"><div class="row">
+      <button class="navbtn" data-go="home"><span class="chev-l"></span>Home</button>
+      <span class="title">Checking</span><span style="width:66px"></span>
+    </div></div>
+    <div class="body">
+      <div class="chat">
+        <div class="sent"><span>Submitted screenshot</span></div>
+        <div class="bub" hidden><span class="tick"></span><span>Checking your screenshot.</span></div>
+        <div class="bub" hidden><span class="tick"></span><span>Looking up any links and phone numbers in it.</span></div>
+        <div class="bub" hidden><span class="tick"></span><span>Identifying potential scam patterns.</span></div>
+        <div class="bub" hidden><span class="tick"></span><span>Putting your answer together.</span></div>
+        <div class="typing"><i></i><i></i><i></i></div>
+        <div class="slowmsg" data-state="slow">This one is taking longer than usual. Nothing has gone wrong.</div>
+      </div>
+      <div class="keepgo">
+        <span class="ic"></span>
+        <span>You can leave this screen — the check keeps running and your answer will be waiting on Home.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="result" data-nav="stack">
+    <div class="navbar"><div class="row">
+      <button class="navbtn" data-go="home"><span class="chev-l"></span>Home</button>
+      <span class="title">Result</span><span style="width:72px"></span>
+    </div></div>
+    <div class="body">
+
+      <!-- RED — chat message -->
+      <div data-res="scam" class="on">
+        <div class="verdict" data-v="scam">
+          <div class="vhead"><span class="vdot"></span><span class="vlabel">Scam</span></div>
+          <div class="vbody">
+            <h5>Here's why</h5>
+            <ul>
+              <li>It claims you've won a prize you never entered for.</li>
+              <li>It pushes you to act immediately — real companies don't.</li>
+              <li>It asks for your bank details by text message.</li>
+            </ul>
+            <h5>What to do</h5>
+            <p class="advice">Don't reply and don't tap any links. Your bank will never ask for account details over text. Delete the message, then block the sender.</p>
+          </div>
+        </div>
+        <div class="evidence"><div class="th"></div>
+          <div><div class="t1">1 screenshot</div><div class="t2">Checked just now</div></div></div>
+      </div>
+
+      <!-- ORANGE — ad, with clarification turn -->
+      <div data-res="suspicious">
+        <div class="verdict" data-v="suspicious" id="susp-card">
+          <div class="vhead"><span class="vdot"></span><span class="vlabel" id="susp-label">Suspicious</span>
+            <span class="upd" id="susp-upd">Updated</span></div>
+          <div class="vbody">
+            <h5>Here's why</h5>
+            <ul id="susp-why">
+              <li>The discount is far below the normal price for this product.</li>
+              <li>The shop was registered three weeks ago.</li>
+              <li>We couldn't find any independent reviews of the seller.</li>
+            </ul>
+            <h5>What to do</h5>
+            <p class="advice" id="susp-advice">Don't enter card details yet. Answering a few questions below will let us give you a firm verdict.</p>
+          </div>
+        </div>
+        <div class="evidence"><div class="th"></div>
+          <div><div class="t1">1 screenshot</div><div class="t2">Checked just now</div></div></div>
+        <div class="askq" id="askq">
+          <div class="turn" id="q-lede">A few quick questions will let us give you a firm answer.</div>
+          <p id="q-text"></p>
+          <div class="opts">
+            <button data-answer="yes">Yes</button>
+            <button data-answer="no">No</button>
+          </div>
+          <button class="skip" data-answer="skip">Skip these questions</button>
+        </div>
+      </div>
+
+      <!-- GREEN -->
+      <div data-res="benign">
+        <div class="verdict" data-v="benign">
+          <div class="vhead"><span class="vdot"></span><span class="vlabel">Looks safe</span></div>
+          <div class="vbody">
+            <h5>Here's why</h5>
+            <ul>
+              <li>The sender matches the company it claims to be from.</li>
+              <li>The link goes to the company's real website.</li>
+              <li>Nothing in the wording pressures you to act fast.</li>
+            </ul>
+            <h5>What to do</h5>
+            <p class="advice">This one looks genuine. You can carry on — and if anything about it still feels off, trust that feeling and check again.</p>
+          </div>
+        </div>
+        <div class="evidence"><div class="th"></div>
+          <div><div class="t1">1 screenshot</div><div class="t2">Checked just now</div></div></div>
+      </div>
+
+      <!-- UNREADABLE -->
+      <div data-res="unreadable">
+        <div class="verdict">
+          <div class="vhead"><span class="vdot"></span><span class="vlabel">Couldn't read this one</span></div>
+          <div class="vbody">
+            <h5>What happened</h5>
+            <ul><li>The text in the image is too small or too blurry to read.</li></ul>
+            <h5>What to do</h5>
+            <p class="advice">Take another screenshot with the message filling the screen, then send it again. We haven't made any judgement on this one.</p>
+          </div>
+        </div>
+        <div data-block="cta" style="margin-top:0"><button class="btn" data-sheet="pick">Try another screenshot</button></div>
+      </div>
+
+      <div class="primer" data-first-only>
+        <h5>New to Total Halo</h5>
+        <p class="lede">Halo checks screenshots and photos of messages, ads and websites, then tells you what it found and what to do about it.</p>
+        <div class="leg">
+          <div><span class="d r"></span><span><b>Scam</b> — don't reply, don't tap links. Follow the advice above.</span></div>
+          <div><span class="d o"></span><span><b>Suspicious</b> — something's off, and a couple of answers will settle it.</span></div>
+          <div><span class="d g"></span><span><b>Looks safe</b> — nothing concerning found. Check again if it still feels wrong.</span></div>
+        </div>
+      </div>
+      <div class="fb" id="fb">
+        <div class="fb-ask">
+          <span>Did we get it right?</span>
+          <div class="btns">
+            <button data-fb="up" aria-label="Yes, this was right">
+              <svg viewBox="0 0 24 24"><path d="M8 21V10.2L13 3c1.3 0 2.2 1 2.2 2.2L14.4 9H20a1.8 1.8 0 0 1 1.8 2.1l-1.4 7.4A2.4 2.4 0 0 1 18 21H8z"/><rect x="2.6" y="10.2" width="5" height="10.8" rx="1.1"/></svg>
+            </button>
+            <button data-fb="down" aria-label="No, this was wrong">
+              <svg viewBox="0 0 24 24"><path d="M8 3v10.8L13 21c1.3 0 2.2-1 2.2-2.2L14.4 15H20a1.8 1.8 0 0 0 1.8-2.1l-1.4-7.4A2.4 2.4 0 0 0 18 3H8z"/><rect x="2.6" y="3" width="5" height="10.8" rx="1.1"/></svg>
+            </button>
+          </div>
+        </div>
+        <p class="fb-thanks" id="fb-thanks"></p>
+      </div>
+    </div>
+    <div data-block="cta" style="margin-top:0;padding-top:4px">
+      <button class="btn" data-sheet="pick">Check something else</button>
+      <button class="btn ghost" data-first-only data-go="home" style="margin-top:9px">Turn on scam protection</button>
+    </div>
+  </section>
+
+  <div class="scrim" data-sheet-close></div>
+  <div class="sheet" id="sheet-share">
+    <div class="grp">
+      <div class="sh-head">
+        <div class="th"></div>
+        <div><div class="t1">Photo</div><div class="t2">Today · 1 item</div></div>
+      </div>
+      <div class="sh-apps">
+        <button class="sh-app"><span class="tile">AIR<br>DROP</span><span class="nm">AirDrop</span></button>
+        <button class="sh-app"><span class="tile">MSG</span><span class="nm">Messages</span></button>
+        <button class="sh-app"><span class="tile">MAIL</span><span class="nm">Mail</span></button>
+        <button class="sh-app halo" data-go="confirm" data-entry="share" data-sheet-close>
+          <span class="tile">TOTAL<br>HALO</span><span class="nm">Total Halo</span></button>
+        <button class="sh-app"><span class="tile">WA</span><span class="nm">WhatsApp</span></button>
+      </div>
+      <div class="sh-rows">
+        <button>Copy Photo <span class="gl"></span></button>
+        <button>Add to Album <span class="gl"></span></button>
+        <button>Save to Files <span class="gl"></span></button>
+      </div>
+    </div>
+    <div class="grp cancel"><button data-sheet-close>Cancel</button></div>
+  </div>
+
+  <div class="sheet" id="sheet-pick">
+    <div class="grp">
+      <div class="ttl">Add a screenshot you took, or photograph a message on someone else's screen</div>
+      <button data-go="gallery" data-sheet-close>Photo Library</button>
+      <button data-go="camera" data-sheet-close>Take Photo</button>
+    </div>
+    <div class="grp cancel"><button data-sheet-close>Cancel</button></div>
+  </div>
+
+  <div class="home-ind"></div>
+</div>
+</div>
+  </div>
+  <p class="foot">Prototype only — nothing here is connected to a real scam
+    engine, and every verdict shown is written copy standing in for one.</p>
+</div>
+<script>
+/* ===== Router: hash-addressable screens + back stack ===== */
+const stack = [];
+function show(id, dir){
+  const next = document.getElementById(id);
+  const cur  = document.querySelector('.screen.active');
+  if(!next || next === cur) return;
+  if(dir === 'pop' && cur){
+    cur.classList.add('pop-out');
+    cur.addEventListener('animationend', () => cur.classList.remove('active','pop-out'), {once:true});
+    next.classList.add('active');
+  } else {
+    if(cur) cur.classList.remove('active');
+    next.classList.add('active');
+    if(dir === 'push'){
+      next.classList.add('push-in');
+      next.addEventListener('animationend', () => next.classList.remove('push-in'), {once:true});
+    }
+  }
+  next.querySelector('.body')?.scrollTo(0,0);
+  try{ history.replaceState(null,'','#'+id); }catch(e){}  // frame may refuse
+  if(id === 'analyzing' && document.body.dataset.pending !== 'run') startCheck();
+  else if(id === 'analyzing') paintCheck();
+  if(id === 'result') document.body.dataset.pending = '';
+}
+function go(id){
+  if(id === 'photos' || id === 'photo-detail') document.body.dataset.entry = 'app';
+document.body.dataset.first = '0';
+  if(id === 'home') document.body.dataset.entry = 'app';
+document.body.dataset.first = '0';
+  const cur = document.querySelector('.screen.active');
+  // Arriving from anywhere but Home means a fresh screenshot was just submitted.
+  if(id === 'analyzing' && cur && cur.id !== 'home') document.body.dataset.pending = '';
+  const toStack = document.getElementById(id)?.dataset.nav === 'stack';
+  if(cur && toStack && cur.id !== id) stack.push(cur.id);
+  show(id, toStack ? 'push' : 'switch');
+}
+function back(){ show(stack.pop() || 'home', 'pop'); }
+
+/* ===== Action sheet ===== */
+function openSheet(id){ document.querySelector('.scrim').classList.add('on');
+  document.getElementById('sheet-' + id)?.classList.add('on'); }
+function closeSheet(){ document.querySelector('.scrim').classList.remove('on');
+  document.querySelectorAll('.sheet').forEach(el => el.classList.remove('on')); }
+
+document.addEventListener('click', e => {
+  const sh = e.target.closest('[data-sheet]');
+  if(sh){ openSheet(sh.dataset.sheet); return; }
+  if(e.target.closest('[data-sheet-close]')){
+    const el = e.target.closest('[data-sheet-close]');
+    if(el.dataset.entry) document.body.dataset.entry = el.dataset.entry;
+    closeSheet();
+    const g = e.target.closest('[data-go]');
+    if(g){ stack.length = 0; setTimeout(() => go(g.dataset.go), 180); }
+    return;
+  }
+  const pick = e.target.closest('[data-pick]');
+  if(pick){
+    const on = pick.getAttribute('aria-selected') === 'true';
+    pick.setAttribute('aria-selected', !on);
+    const n = document.querySelectorAll('#gallery .cell[aria-selected="true"]').length;
+    const up = document.querySelector('#gallery [data-block="cta"] .btn');
+    if(up){ up.textContent = n ? `Upload (${n})` : 'Select a screenshot'; up.disabled = !n; }
+    return;
+  }
+  const g = e.target.closest('[data-go]');
+  if(g){ go(g.dataset.go); return; }
+  if(e.target.closest('[data-back]')) back();
+});
+
+/* Swipe-back from the left edge */
+let x0 = null;
+const dev = document.querySelector('.device');
+dev.addEventListener('touchstart', e => { x0 = e.touches[0].clientX < 28 ? e.touches[0].clientX : null; },{passive:true});
+dev.addEventListener('touchend', e => { if(x0 !== null && e.changedTouches[0].clientX - x0 > 60) back(); x0 = null; },{passive:true});
+
+/* ===== Analysis: narrate the wait, and survive the user walking away =====
+   The reassurance line on this screen is only honest if leaving actually
+   works, so the run lives on the body rather than on the screen: it keeps
+   ticking while the user is on Home, and Home carries a row back into it. */
+/* Uneven on purpose. A fixed interval reads as a canned animation; real work
+   does not arrive on the beat. The link and number lookups hit the network, so
+   that is the long leg. Jitter keeps two runs from being identical. */
+const CHECK_STEPS = [1400, 2800, 2200, 1700];  // ms spent BEFORE each line lands
+const VERDICT_MS  = 1300;                      // dots keep moving while the card is built
+const JITTER      = 0.2;                       // ±20%
+let checkTimers = [], checkStep = -1;
+
+function paintCheck(){
+  const bubs = [...document.querySelectorAll('#analyzing .bub')];
+  bubs.forEach((b, i) => {
+    b.hidden = i > checkStep;
+    b.classList.toggle('past', i < checkStep);
+  });
+  const running = document.body.dataset.pending !== 'done';
+  document.querySelector('#analyzing .typing')?.classList.toggle('on', running);
+  document.querySelector('#analyzing .keepgo')?.classList.toggle('on', checkStep >= 0);
+  const chat = document.querySelector('#analyzing .chat');
+  if(chat) chat.scrollTop = chat.scrollHeight;
+}
+
+function startCheck(){
+  checkTimers.forEach(clearTimeout); checkTimers = [];
+  checkStep = -1;
+  // Submitted is submitted — back and swipe-back go Home, not to the submit step,
+  // which would otherwise offer "Check for scams" on a screenshot already running.
+  stack.length = 0;
+  document.body.dataset.pending = 'run';
+  paintCheck();
+  if(document.body.dataset.still === '1'){      // frozen mid-stream for screenshots
+    checkStep = 1; paintCheck(); return;
+  }
+  const n = document.querySelectorAll('#analyzing .bub').length;
+  let t = 0;
+  for(let i = 0; i < n; i++){
+    t += (CHECK_STEPS[i] ?? 2000) * (1 + (Math.random() * 2 - 1) * JITTER);
+    checkTimers.push(setTimeout(() => {
+      checkStep = i; paintCheck();
+      if(i === n - 1) checkTimers.push(setTimeout(finishCheck, VERDICT_MS));
+    }, t));
+  }
+}
+
+function finishCheck(){
+  document.body.dataset.pending = 'done';
+  // Only yank them to the result if they stayed. If they left, Home holds it.
+  if(document.querySelector('.screen.active')?.id === 'analyzing'){
+    document.body.dataset.pending = '';
+    go('result');
+  }
+}
+
+document.body.dataset.entry = 'app';
+document.body.dataset.first = '0';
+
+
+/* ===== Clarification turns =====
+   No "Question 1 of N" — committing to a count boxes the backend in and,
+   when it changes, reads as a bug. Instead the lede adapts so the user can
+   feel the end coming without being promised a number. */
+const QUESTIONS = [
+  { q: "Did this ad ask you to pay by bank transfer, gift card or crypto?",       risk: "yes" },
+  { q: "Could you find a contact address or phone number for the shop?",          risk: "no"  },
+  { q: "Have you already sent them money or entered your card details?",          risk: "yes", key: "paid" }
+];
+const LEDES = [
+  "A few quick questions will let us give you a firm answer.",
+  "Just a couple more.",
+  "Last one."
+];
+let qi = 0, answers = {};
+
+function renderQuestion(){
+  const card = document.getElementById('askq');
+  if(!card) return;
+  if(qi >= QUESTIONS.length){ resolveVerdict(); return; }
+  document.getElementById('q-lede').textContent = LEDES[Math.min(qi, LEDES.length - 1)];
+  document.getElementById('q-text').textContent = QUESTIONS[qi].q;
+  card.style.display = '';
+}
+
+function resolveVerdict(skipped){
+  document.getElementById('askq').style.display = 'none';
+  const risky = QUESTIONS.filter((Q,i) => answers[i] && answers[i] === Q.risk).length;
+  const paid  = answers[2] === 'yes';
+  const label = document.getElementById('susp-label');
+  const card  = document.getElementById('susp-card');
+  const why   = document.getElementById('susp-why');
+  const adv   = document.getElementById('susp-advice');
+
+  if(skipped){
+    adv.textContent = "Don't enter card details and don't pay by transfer or gift card. We couldn't confirm this one either way, so treat it as unsafe until you can.";
+  } else if(risky >= 2){
+    card.dataset.v = 'scam'; label.textContent = 'Scam';
+    why.insertAdjacentHTML('beforeend',
+      '<li>You told us it wants payment by transfer or gift card, and the shop has no contactable address — together with the pricing, that is a scam storefront.</li>');
+    adv.textContent = paid
+      ? "Call your bank now and tell them you paid a fraudulent seller — ask about a chargeback. Then stop replying to the seller and keep the screenshots."
+      : "Don't pay, and don't enter card details. Leave the site. If you want the product, buy it from a seller you can find independently.";
+  } else {
+    card.dataset.v = 'benign'; label.textContent = 'Probably fine';
+    why.insertAdjacentHTML('beforeend',
+      '<li>Your answers rule out the payment patterns we see in scam storefronts.</li>');
+    adv.textContent = "Nothing here points to a scam. Pay by card rather than transfer so you keep your chargeback rights, and keep the receipt.";
+  }
+  document.getElementById('susp-upd').classList.add('on');
+  resetFeedback();
+  const fb = document.querySelector('#result .fb');
+  if(fb) fb.style.display = '';
+}
+
+document.addEventListener('click', e => {
+  const f = e.target.closest('[data-fb]');
+  if(f){
+    const fb = document.getElementById('fb');
+    fb.querySelectorAll('[data-fb]').forEach(b => {
+      b.setAttribute('aria-pressed', b === f);
+      if(b !== f) b.disabled = true;
+    });
+    fb.classList.add('done');
+    const t = document.getElementById('fb-thanks');
+    t.textContent = f.dataset.fb === 'up'
+      ? 'Thanks — that helps us get the next one right.'
+      : "Thanks for telling us. We'll take another look at this check.";
+    t.classList.add('on');
+    return;
+  }
+  const a = e.target.closest('[data-answer]');
+  if(!a) return;
+  if(a.dataset.answer === 'skip'){ resolveVerdict(true); return; }
+  answers[qi] = a.dataset.answer;
+  qi++;
+  renderQuestion();
+});
+
+/* Reset the turn state whenever the suspicious result is (re)shown */
+function resetQuestions(){
+  qi = 0; answers = {};
+  const card = document.getElementById('susp-card');
+  if(!card) return;
+  card.dataset.v = 'suspicious';
+  document.getElementById('susp-label').textContent = 'Suspicious';
+  document.getElementById('susp-upd').classList.remove('on');
+  document.querySelectorAll('#susp-why li').forEach((li,i) => { if(i > 2) li.remove(); });
+  document.getElementById('susp-advice').textContent =
+    "Don't enter card details yet. Answering a few questions below will let us give you a firm verdict.";
+  renderQuestion();
+}
+
+/* ===== Dev toolbar ===== */
+function press(group, el){ document.querySelectorAll(group).forEach(o => o.setAttribute('aria-pressed', o === el)); }
+document.querySelectorAll('[data-fid]').forEach(b => b.onclick = () => {
+  document.documentElement.dataset.fidelity = b.dataset.fid; press('[data-fid]', b);
+});
+document.querySelectorAll('[data-jump]').forEach(b => b.onclick = () => { stack.length = 0; show(b.dataset.jump,'switch'); });
+document.querySelectorAll('[data-st]').forEach(b => b.onclick = () => {
+  const want = b.dataset.st;
+  document.querySelectorAll('[data-state]').forEach(el => el.classList.toggle('on', el.dataset.state === want));
+  press('[data-st]', b);
+});
+document.querySelectorAll('.devbar [data-turn]').forEach(b => b.onclick = () => {
+  setResult('suspicious'); press('.devbar [data-res]', null);
+  qi = +b.dataset.turn; renderQuestion(); press('.devbar [data-turn]', b);
+});
+document.querySelectorAll('.devbar [data-first]').forEach(b => b.onclick = () => {
+  document.body.dataset.first = b.dataset.first; press('.devbar [data-first]', b);
+});
+document.querySelectorAll('[data-res]').forEach(b => {
+  if(!b.closest('.devbar')) return;
+  b.onclick = () => { setResult(b.dataset.res); press('.devbar [data-res]', b); };
+});
+function setResult(want){
+  document.querySelectorAll('#result > .body > [data-res]').forEach(el => el.classList.toggle('on', el.dataset.res === want));
+  /* "Did we get it right?" belongs after a FINAL verdict only — never while a
+     clarification question is still open, and never on an unreadable image. */
+  const pending = (want === 'unreadable' || want === 'suspicious');
+  const fb = document.querySelector('#result .fb');
+  if(fb) fb.style.display = pending ? 'none' : '';
+  if(want === 'suspicious') resetQuestions();
+  resetFeedback();
+}
+
+function resetFeedback(){
+  const fb = document.getElementById('fb');
+  if(!fb) return;
+  fb.classList.remove('done');
+  fb.querySelectorAll('[data-fb]').forEach(b => { b.setAttribute('aria-pressed','false'); b.disabled = false; });
+  const t = document.getElementById('fb-thanks');
+  t.textContent = ''; t.classList.remove('on');
+}
+setResult('scam');
+
+/* ===== URL control, so every view is screenshottable =====
+   prototype.html?fid=hi&theme=light&state=returning&res=suspicious&chrome=off&still=1#result */
+const q = new URLSearchParams(location.search);
+if(q.get('chrome') === 'off') document.body.dataset.chrome = 'off';
+if(q.get('still') === '1')    document.body.dataset.still = '1';
+if(q.get('sheet'))            setTimeout(() => openSheet(q.get('sheet') === '1' ? 'pick' : q.get('sheet')), 30);
+if(q.get('theme'))            document.documentElement.dataset.theme = q.get('theme');
+if(q.get('entry'))            document.body.dataset.entry = q.get('entry');
+if(q.get('first'))            document.body.dataset.first = q.get('first');
+if(q.get('fid'))  document.querySelector(`.devbar [data-fid="${q.get('fid')}"]`)?.click();
+if(q.get('state'))document.querySelector(`.devbar [data-st="${q.get('state')}"]`)?.click();
+if(q.get('res'))  document.querySelector(`.devbar [data-res="${q.get('res')}"]`)?.click();
+/* turn=N jumps to a clarification question; resolve=scam|safe|skip shows the outcome.
+   Must run AFTER the res click, which resets the turn state. */
+if(q.get('turn')){ qi = +q.get('turn'); renderQuestion(); }
+if(q.get('resolve')){
+  if(q.get('resolve') === 'skip'){ resolveVerdict(true); }
+  else {
+    answers = q.get('resolve') === 'scam' ? {0:'yes',1:'no',2:'yes'} : {0:'no',1:'yes',2:'no'};
+    qi = QUESTIONS.length; resolveVerdict();
+  }
+}
+if(q.get('fb')) document.querySelector(`[data-fb="${q.get('fb')}"]`)?.click();
+if(location.hash) show(location.hash.slice(1),'switch');
+/* step=N freezes the narration mid-stream; pending=run|done paints Home's row.
+   Both run last — show() above starts a live run that these then override. */
+if(q.get('step') !== null && q.get('step') !== undefined){
+  checkTimers.forEach(clearTimeout); checkTimers = [];
+  checkStep = +q.get('step'); paintCheck();
+}
+if(q.get('pending')){
+  checkTimers.forEach(clearTimeout); checkTimers = [];
+  document.body.dataset.pending = q.get('pending');
+}
+</script>
+
+</body>
+</html>
