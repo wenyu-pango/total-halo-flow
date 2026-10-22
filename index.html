@@ -215,6 +215,45 @@ body{margin:0;min-height:100%;background:var(--page-bg);color:var(--page-fg);
 .sheet button:last-child{border-bottom:0}
 .sheet button:active{background:var(--surface)}
 .sheet .cancel button{font-weight:600;background:var(--bg)}
+.sheet .grp .ttl b{display:block;font-size:15px;color:var(--ink);margin-bottom:4px}
+
+/* --- iOS system permission alert (photo library) ---
+   iOS shows this once per app. After "Don't Allow" the app can never show it
+   again; the only way back is Settings, which is why denied users get Halo's
+   own sheet (sheet-noperm) instead. */
+.sysalert{position:absolute;inset:0;z-index:60;display:none;place-items:center;background:rgba(0,0,0,.4)}
+.sysalert.on{display:grid}
+.sysalert .box{width:270px;background:var(--chrome);border-radius:14px;overflow:hidden;text-align:center;
+  backdrop-filter:saturate(180%) blur(20px)}
+.sysalert .tx{padding:19px 16px 15px}
+.sysalert h4{margin:0 0 4px;font-size:17px;font-weight:600;line-height:1.3;color:var(--ink)}
+.sysalert p{margin:0;font-size:13px;line-height:1.38;color:var(--ink)}
+.sysalert .thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin:12px 0 0}
+.sysalert .thumbs i{aspect-ratio:1;background:var(--block);display:block}
+.sysalert button{display:block;width:100%;min-height:44px;border:0;border-top:.5px solid var(--line);
+  background:none;font:17px var(--font);color:var(--accent);cursor:pointer}
+.sysalert button.strong{font-weight:600}
+
+/* --- iOS Settings › Total Halo › Photos --- */
+.set-grp{margin:22px 16px 0}
+.set-grp .hd{font-size:13px;color:var(--ink-2);text-transform:uppercase;letter-spacing:.2px;padding:0 16px 6px}
+.set-grp .rows{background:var(--surface);border-radius:10px;overflow:hidden}
+.set-grp button{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:44px;
+  padding:0 16px;border:0;border-bottom:.5px solid var(--line);background:none;font:17px var(--font);
+  color:var(--ink);cursor:pointer;text-align:left}
+.set-grp button:last-child{border-bottom:0}
+.set-grp button[aria-checked="true"]::after{content:"✓";color:var(--accent);font-weight:600}
+.set-grp .ft{font-size:13px;line-height:1.4;color:var(--ink-2);padding:8px 16px 0}
+/* Returning to the app from Settings: iOS swaps the clock for a back-to-app breadcrumb */
+.crumb{display:none;position:absolute;top:13px;left:22px;z-index:45;border:0;background:none;
+  font:600 12px var(--font);color:var(--accent);cursor:pointer;padding:4px 0}
+.device:has(#settings-photos.active) .crumb{display:block}
+.device:has(#settings-photos.active) .statusbar > span:first-child{visibility:hidden}
+/* Limited access: the gallery says so, and offers to change it */
+.lim{display:none;margin:10px 16px 0;padding:10px 12px;border-radius:10px;background:var(--surface);
+  font-size:13px;line-height:1.4;color:var(--ink-2)}
+body[data-perm="limited"] .lim{display:block}
+.lim button{border:0;background:none;padding:0;font:600 13px var(--font);color:var(--accent);cursor:pointer}
 /* --- iOS Photos app (context outside Halo) --- */
 .ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:2px}
 .ph-grid .cell{aspect-ratio:1;background:var(--block);cursor:pointer;position:relative}
@@ -223,6 +262,24 @@ body{margin:0;min-height:100%;background:var(--page-bg);color:var(--page-fg);
 .ph-bar{position:absolute;left:0;right:0;bottom:0;height:calc(var(--tabbar-h) + var(--safe-bottom));
   padding-bottom:var(--safe-bottom);background:var(--chrome);border-top:.5px solid var(--line);
   display:flex;z-index:25;backdrop-filter:blur(20px)}
+/* Select mode: tick photos, then share them together from the bottom bar */
+.ph-grid .cell .tick{display:none;position:absolute;bottom:6px;right:6px;width:21px;height:21px;border-radius:50%;
+  border:1.6px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);z-index:1}
+#photos[data-select="on"] .ph-grid .cell .tick{display:block}
+#photos .cell[aria-selected="true"] .tick{background:var(--accent)}
+#photos .cell[aria-selected="true"]{box-shadow:0 0 0 3px var(--accent) inset}
+.ph-selbar{position:absolute;left:0;right:0;bottom:0;height:calc(var(--tabbar-h) + var(--safe-bottom));
+  padding:0 12px var(--safe-bottom);background:var(--chrome);border-top:.5px solid var(--line);
+  display:none;align-items:center;justify-content:space-between;z-index:26}
+#photos[data-select="on"] .ph-selbar{display:flex}
+#photos[data-select="on"] .ph-bar{display:none}
+.ph-selbar .cnt{font-size:15px;font-weight:600;color:var(--ink)}
+.ph-selbar button{background:none;border:0;color:var(--accent);min-width:var(--tap);min-height:var(--tap);
+  display:grid;place-items:center;cursor:pointer}
+.ph-selbar button:disabled{color:var(--ink-3);cursor:default}
+.ph-selbar button.dim{color:var(--ink-2)}
+.ph-selbar svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round}
 .ph-detail{flex:1;display:flex;flex-direction:column;background:var(--bg)}
 .ph-detail .pic{flex:1;background:var(--block);margin:0;display:grid;place-items:center;
   font-size:12px;color:var(--ink-3);text-align:center;padding:0 36px;line-height:1.5}
@@ -234,6 +291,22 @@ body{margin:0;min-height:100%;background:var(--page-bg);color:var(--page-fg);
 .ph-tools svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;
   stroke-linecap:round;stroke-linejoin:round}
 .ph-tools button.dim{color:var(--ink-2)}
+
+/* --- iOS screenshot capture (Flow D: share without saving to Photos) --- */
+.sms-head{padding:6px 16px 10px;text-align:center;background:var(--chrome);border-bottom:.5px solid var(--line)}
+.sms-head .av{width:40px;height:40px;border-radius:50%;background:var(--block);margin:0 auto 4px}
+.sms-head .nm{font-size:12px;color:var(--ink)}
+.sms{padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.sms .when{font-size:11px;color:var(--ink-3);text-align:center}
+.sms .in{max-width:78%;background:var(--surface);border-radius:17px;padding:9px 13px;
+  font-size:15px;line-height:1.35;color:var(--ink)}
+/* The floating preview iOS shows for a few seconds after a screenshot */
+.ss-thumb{position:absolute;left:14px;bottom:calc(var(--safe-bottom) + 14px);width:86px;height:176px;
+  border-radius:10px;border:3px solid var(--bg);outline:1px solid var(--line);box-shadow:var(--shadow);
+  background:var(--block);z-index:36;cursor:pointer;display:grid;place-items:center;padding:6px;
+  font:10px/1.35 var(--font);color:var(--ink-3);text-align:center}
+.navbtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round}
 
 /* --- iOS share sheet --- */
 #sheet-share .grp{padding:0}
@@ -257,7 +330,9 @@ body{margin:0;min-height:100%;background:var(--page-bg);color:var(--page-fg);
 
 /* --- confirm (landed from a share) --- */
 .confirm{padding:4px 16px 0}
-.confirm .shots{display:flex;gap:9px;align-items:flex-start;margin:4px 0 16px}
+/* One row that scrolls sideways, so several screenshots never push the copy down */
+.confirm .shots{display:flex;gap:9px;align-items:flex-start;margin:4px -16px 16px;padding:0 16px;overflow-x:auto}
+.confirm .shots > *{flex:0 0 auto}
 .confirm .shot{width:104px;height:138px;background:var(--block);border-radius:9px;flex:0 0 auto;
   display:grid;place-items:center;font-size:10px;color:var(--ink-3);text-align:center;padding:0 8px;
   line-height:1.4;position:relative}
@@ -501,7 +576,13 @@ img{max-width:100%}
   <b>Flow</b>
   <button data-jump="onb1">A · Day 0</button>
   <button data-jump="home">B · Home</button>
-  <button data-jump="photos">C · Photos (share)</button>
+  <button data-jump="photos">C · Share from Photo Library</button>
+  <button data-jump="shot-app">D · Share from screenshot (without saving to library)</button>
+  <b>Photo access</b>
+  <button data-perm="unknown" aria-pressed="true">Not asked yet</button>
+  <button data-perm="granted">Allowed</button>
+  <button data-perm="limited">Limited</button>
+  <button data-perm="denied">Denied</button>
   <b>Home state</b>
   <button data-st="firstrun" aria-pressed="true">First run</button>
   <button data-st="returning">Returning</button>
@@ -531,7 +612,7 @@ img{max-width:100%}
   <!-- ============ FLOW C — SHARE-SHEET ENTRY (outside Halo) ============ -->
   <section class="screen" id="photos" data-nav="tabs">
     <div class="navbar">
-      <div class="row"><span class="title"></span><button class="navbtn" style="margin-left:auto">Select</button></div>
+      <div class="row"><span class="title"></span><button class="navbtn" style="margin-left:auto" data-select-toggle>Select</button></div>
       <div class="large">Library</div>
     </div>
     <div class="body">
@@ -556,6 +637,13 @@ img{max-width:100%}
       <button class="tab"><span>Albums</span></button>
       <button class="tab"><span>Search</span></button>
     </nav>
+    <div class="ph-selbar">
+      <button data-sheet="share" data-origin="photos-sel" aria-label="Share" disabled>
+        <svg viewBox="0 0 24 24"><path d="M12 3.5v12"/><path d="M8 7.2 12 3.3l4 3.9"/><path d="M5.5 12.5V20h13v-7.5"/></svg>
+      </button>
+      <span class="cnt">Select Items</span>
+      <button class="dim" aria-label="Delete"><svg viewBox="0 0 24 24"><path d="M5.5 7h13M9.5 7V5h5v2M7 7l.8 12.2h8.4L17 7"/></svg></button>
+    </div>
   </section>
 
   <section class="screen" id="photo-detail" data-nav="stack">
@@ -576,6 +664,37 @@ img{max-width:100%}
     </div>
   </section>
 
+  <!-- ============ FLOW D — SHARE A SCREENSHOT WITHOUT SAVING IT (outside Halo) ============ -->
+  <section class="screen" id="shot-app" data-nav="none">
+    <div class="body" style="padding-bottom:0">
+      <div class="sms-head"><div class="av"></div><div class="nm">+44 7700 900123</div></div>
+      <div class="sms">
+        <div class="when">Text Message · Today 09:38</div>
+        <div class="in">Royal Mail: Your parcel could not be delivered. Pay the £1.45 redelivery fee within 24 hours or it will be returned: royalmail-redeliver.co/uk</div>
+      </div>
+    </div>
+    <button class="ss-thumb" data-go="markup" aria-label="Screenshot preview">Screenshot preview</button>
+  </section>
+
+  <section class="screen" id="markup" data-nav="none">
+    <div class="navbar"><div class="row">
+      <button class="navbtn" data-go="shot-app">Done</button>
+      <span class="title">Screenshot</span>
+      <button class="navbtn" data-sheet="share" data-origin="markup" aria-label="Share">
+        <svg viewBox="0 0 24 24"><path d="M12 3.5v12"/><path d="M8 7.2 12 3.3l4 3.9"/><path d="M5.5 12.5V20h13v-7.5"/></svg>
+      </button>
+    </div></div>
+    <div class="ph-detail">
+      <div class="pic">Screenshot of the text message — not saved to Photos yet</div>
+      <div class="ph-tools">
+        <button class="dim" aria-label="Pen"><svg viewBox="0 0 24 24"><path d="M4 20l4-1 10-10-3-3L5 16z"/></svg></button>
+        <button class="dim" aria-label="Highlighter"><svg viewBox="0 0 24 24"><path d="M6 20h6M8 16l8-8 3 3-8 8H8z"/></svg></button>
+        <button class="dim" aria-label="Text"><svg viewBox="0 0 24 24"><path d="M6 6h12M12 6v13"/></svg></button>
+        <button class="dim" aria-label="More"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8 12h8"/></svg></button>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ FLOW A — DAY 0 ============ -->
   <section class="screen active" id="onb1" data-nav="none">
     <button class="skip" data-go="home">Skip</button>
@@ -584,7 +703,7 @@ img{max-width:100%}
       <div class="art"><span>Phone with a magnifying glass over a message</span></div>
       <h2>Spot scams in seconds</h2>
       <p>Halo tells you instantly if a message, ad or website is a scam — and explains exactly why.</p>
-      <div class="dots"><i class="on"></i><i></i><i></i><i></i></div>
+      <div class="dots"><i class="on"></i><i></i><i></i><i></i><i></i></div>
       <div class="foot"><button class="btn" data-go="onb2">Next</button></div>
     </div></div>
   </section>
@@ -596,7 +715,7 @@ img{max-width:100%}
       <div class="art"><span>Hand pressing the side and volume buttons to take a screenshot</span></div>
       <h2>Simply take a screenshot</h2>
       <p>Got a suspicious text, email or WhatsApp message? Screenshot it, then pick it in Halo. Checking for someone else? Photograph their screen instead.</p>
-      <div class="dots"><i></i><i class="on"></i><i></i><i></i></div>
+      <div class="dots"><i></i><i class="on"></i><i></i><i></i><i></i></div>
       <div class="foot"><button class="btn" data-go="onb3">Next</button></div>
     </div></div>
   </section>
@@ -608,7 +727,7 @@ img{max-width:100%}
       <div class="art"><span>Four screenshots: an Instagram ad, a shop page, a WhatsApp chat, an email</span></div>
       <h2>Ads, sites, chats and email</h2>
       <p>Screenshot an ad you don't trust, the shop it opens, a message from an unknown number, or an email promising you money. Halo checks them all the same way.</p>
-      <div class="dots"><i></i><i></i><i class="on"></i><i></i></div>
+      <div class="dots"><i></i><i></i><i class="on"></i><i></i><i></i></div>
       <div class="foot"><button class="btn" data-go="onb4">Next</button></div>
     </div></div>
   </section>
@@ -619,8 +738,23 @@ img{max-width:100%}
       <div class="art"><span>Result card: verdict, reasons, and what to do next</span></div>
       <h2>Get answers you can act on</h2>
       <p>Every check comes back with a clear verdict, the reasons behind it, and exactly what to do next.</p>
-      <div class="dots"><i></i><i></i><i></i><i class="on"></i></div>
-      <div class="foot"><button class="btn" data-go="home">Get Started</button></div>
+      <div class="dots"><i></i><i></i><i></i><i class="on"></i><i></i></div>
+      <div class="foot"><button class="btn" data-go="onb-perm">Next</button></div>
+    </div></div>
+  </section>
+
+  <!-- Day 0 permission priming: explain before iOS asks, because iOS only asks once -->
+  <section class="screen" id="onb-perm" data-nav="none">
+    <div class="body"><div class="onb">
+      <div class="brand"><span class="ring"></span>TOTAL HALO</div>
+      <div class="art"><span>Photo library with a few screenshots highlighted</span></div>
+      <h2>Let Halo see your screenshots</h2>
+      <p>To check a screenshot, Halo needs to open it. Halo only reads the screenshots you choose to check, and doesn't keep them afterwards.</p>
+      <div class="dots"><i></i><i></i><i></i><i></i><i class="on"></i></div>
+      <div class="foot">
+        <button class="btn" data-perm-ask="home">Allow photo access</button>
+        <button class="btn ghost" data-go="home" style="margin-top:9px">Not now</button>
+      </div>
     </div></div>
   </section>
 
@@ -684,6 +818,7 @@ img{max-width:100%}
     </div></div>
     <div class="body">
       <div data-state="default" class="on">
+        <div class="lim">You've let Halo see only some of your photos. Don't see the screenshot? <button data-settings>Change access</button></div>
         <div data-block="text" style="padding:12px 16px 10px">An ad, the site it opens, a chat message, or an email — pick every screenshot in the conversation and Halo reads them together.</div>
         <div class="gal">
           <div class="cell" aria-selected="true" data-pick><div class="tick"></div></div>
@@ -710,7 +845,7 @@ img{max-width:100%}
 
   <section class="screen" id="confirm" data-nav="stack">
     <div class="navbar"><div class="row">
-      <button class="navbtn" data-go="photos">Cancel</button>
+      <button class="navbtn" data-cancel>Cancel</button>
       <span class="title">Check for scams</span><span style="width:76px"></span>
     </div></div>
     <div class="body">
@@ -895,6 +1030,14 @@ img{max-width:100%}
     <div class="grp cancel"><button data-sheet-close>Cancel</button></div>
   </div>
 
+  <div class="sheet" id="sheet-noperm">
+    <div class="grp">
+      <div class="ttl"><b>Halo can't see your photos</b>Photo access is turned off for Total Halo. Turn it on in Settings to pick a screenshot here. Or share a screenshot to Halo straight from Photos, which works without access.</div>
+      <button data-settings data-sheet-close>Open Settings</button>
+    </div>
+    <div class="grp cancel"><button data-sheet-close>Not now</button></div>
+  </div>
+
   <div class="sheet" id="sheet-pick">
     <div class="grp">
       <div class="ttl">Add a screenshot you took, or photograph a message on someone else's screen</div>
@@ -903,6 +1046,39 @@ img{max-width:100%}
     </div>
     <div class="grp cancel"><button data-sheet-close>Cancel</button></div>
   </div>
+
+  <div class="sysalert" id="sysalert" role="alertdialog" aria-labelledby="sa-t">
+    <div class="box">
+      <div class="tx">
+        <h4 id="sa-t">"Total Halo" Would Like to Access Your Photos</h4>
+        <p>Halo opens the screenshots you choose so it can check them for scams.</p>
+        <div class="thumbs"><i></i><i></i><i></i><i></i></div>
+      </div>
+      <button data-perm-set="limited">Limit Access…</button>
+      <button data-perm-set="granted">Allow Full Access</button>
+      <button data-perm-set="denied" class="strong">Don't Allow</button>
+    </div>
+  </div>
+
+  <!-- iOS Settings app (outside Halo) -->
+  <section class="screen" id="settings-photos" data-nav="none">
+    <div class="navbar"><div class="row">
+      <button class="navbtn"><span class="chev-l"></span>Total Halo</button>
+      <span class="title">Photos</span><span style="width:76px"></span>
+    </div></div>
+    <div class="body" style="padding-top:0">
+      <div class="set-grp">
+        <div class="hd">Photo library access</div>
+        <div class="rows">
+          <button data-set-perm="denied">None</button>
+          <button data-set-perm="limited">Limited Access</button>
+          <button data-set-perm="granted">Full Access</button>
+        </div>
+        <div class="ft">Total Halo opens the screenshots you choose so it can check them for scams.</div>
+      </div>
+    </div>
+  </section>
+  <button class="crumb" data-crumb>◀ Total Halo</button>
 
   <div class="home-ind"></div>
 </div>
@@ -936,7 +1112,31 @@ function show(id, dir){
   else if(id === 'analyzing') paintCheck();
   if(id === 'result') document.body.dataset.pending = '';
 }
+/* ===== Photo library permission =====
+   unknown → never asked (skipped or "Not now" on Day 0): the first gallery
+             visit shows the real iOS alert.
+   denied  → iOS will never show that alert again, so Halo explains and
+             sends them to Settings.
+   limited / granted → straight to the gallery. Sharing in (Flows C, D) never
+   needs this: the shared image arrives with the share. */
+let permNext = 'home', settingsFrom = 'home';
+const perm = () => document.body.dataset.perm || 'unknown';
+function setPerm(p){
+  document.body.dataset.perm = p;
+  document.querySelectorAll('[data-set-perm]').forEach(b =>
+    b.setAttribute('aria-checked', b.dataset.setPerm === p || (p === 'unknown' && b.dataset.setPerm === 'denied')));
+  document.querySelectorAll('.devbar [data-perm]').forEach(b => b.setAttribute('aria-pressed', b.dataset.perm === p));
+}
+function askPhotos(next){ permNext = next; document.getElementById('sysalert').classList.add('on'); }
+function openSettings(){
+  settingsFrom = document.querySelector('.screen.active')?.id || 'home';
+  setPerm(perm());
+  show('settings-photos', 'switch');
+}
+
 function go(id){
+  if(id === 'gallery' && perm() === 'unknown'){ askPhotos('gallery'); return; }
+  if(id === 'gallery' && perm() === 'denied'){ permNext = 'gallery'; openSheet('noperm'); return; }
   if(id === 'photos' || id === 'photo-detail') document.body.dataset.entry = 'app';
 document.body.dataset.first = '0';
   if(id === 'home') document.body.dataset.entry = 'app';
@@ -956,9 +1156,104 @@ function openSheet(id){ document.querySelector('.scrim').classList.add('on');
 function closeSheet(){ document.querySelector('.scrim').classList.remove('on');
   document.querySelectorAll('.sheet').forEach(el => el.classList.remove('on')); }
 
+/* Where a share came from. Photos (Flow C) and the screenshot editor (Flow D)
+   share one sheet and one Confirm; only the sheet header and Cancel differ. */
+function setOrigin(o, n = 1){
+  document.body.dataset.origin = o;
+  const h = document.querySelector('#sheet-share .sh-head');
+  h.querySelector('.t1').textContent = o === 'markup' ? 'Screenshot' : n > 1 ? `${n} Photos` : 'Photo';
+  h.querySelector('.t2').textContent = o === 'markup' ? 'Not saved to Photos' : `Today · ${n} item${n > 1 ? 's' : ''}`;
+  setCount(n);
+}
+
+/* How many screenshots are in this check. One number drives Confirm and the
+   result, so a multi-photo share never comes back labelled "1 screenshot". */
+function setCount(n){
+  document.body.dataset.count = n;
+  const many = n > 1;
+  document.querySelector('#confirm [data-block="header"]').textContent =
+    many ? 'Check these for scams?' : 'Check this for scams?';
+  document.querySelector('#confirm .body > [data-block="text"]').textContent = many
+    ? "Total Halo will read what's in the screenshots together and tell you whether they look like a scam, why, and what to do."
+    : "Total Halo will read what's in the screenshot and tell you whether it looks like a scam, why, and what to do.";
+  document.querySelector('#confirm .note p').textContent = many
+    ? "Your screenshots are sent to Total Halo to be analysed. We don't keep them after the check is done."
+    : "Your screenshot is sent to Total Halo to be analysed. We don't keep it after the check is done.";
+  const shots = document.querySelector('#confirm .shots');
+  shots.querySelectorAll('.shot').forEach(el => el.remove());
+  const add = shots.querySelector('.addmore');
+  for(let i = 0; i < n; i++){
+    const d = document.createElement('div');
+    d.className = 'shot';
+    d.textContent = n > 1 ? `Shared screenshot ${i + 1}` : 'Shared screenshot';
+    shots.insertBefore(d, add);
+  }
+  document.querySelectorAll('#result .evidence .t1').forEach(el =>
+    el.textContent = `${n} screenshot${n > 1 ? 's' : ''}`);
+}
+
+/* Photos select mode (Flow C): Select → tick one or more → Share */
+const photosEl = document.getElementById('photos');
+photosEl.querySelectorAll('.ph-grid .cell').forEach(c => c.insertAdjacentHTML('beforeend', '<div class="tick"></div>'));
+const selCount = () => photosEl.querySelectorAll('.cell[aria-selected="true"]').length;
+function paintSelect(){
+  const on = photosEl.dataset.select === 'on', n = selCount();
+  photosEl.querySelector('[data-select-toggle]').textContent = on ? 'Cancel' : 'Select';
+  photosEl.querySelector('.ph-selbar .cnt').textContent = n ? `${n} Photo${n > 1 ? 's' : ''} Selected` : 'Select Items';
+  photosEl.querySelector('.ph-selbar [data-sheet]').disabled = !n;
+}
+function setSelect(on){
+  photosEl.dataset.select = on ? 'on' : '';
+  if(!on) photosEl.querySelectorAll('.cell').forEach(c => c.removeAttribute('aria-selected'));
+  paintSelect();
+}
+
 document.addEventListener('click', e => {
   const sh = e.target.closest('[data-sheet]');
-  if(sh){ openSheet(sh.dataset.sheet); return; }
+  if(sh){
+    if(sh.dataset.sheet === 'share'){
+      const o = sh.dataset.origin || 'photos';
+      setOrigin(o, o === 'photos-sel' ? selCount() : 1);
+    }
+    openSheet(sh.dataset.sheet); return;
+  }
+  if(e.target.closest('[data-select-toggle]')){ setSelect(photosEl.dataset.select !== 'on'); return; }
+  const ask = e.target.closest('[data-perm-ask]');
+  if(ask){ askPhotos(ask.dataset.permAsk); return; }
+  const ps = e.target.closest('[data-perm-set]');
+  if(ps){
+    setPerm(ps.dataset.permSet);
+    document.getElementById('sysalert').classList.remove('on');
+    // Allowed → carry on to where they were going. Denied from Day 0 → Home;
+    // denied at the gallery → stay where they are, nothing opens.
+    if(ps.dataset.permSet !== 'denied' || permNext === 'home') go(permNext);
+    return;
+  }
+  const st = e.target.closest('[data-settings]');
+  if(st){
+    if(st.closest('.sheet')){ closeSheet(); setTimeout(openSettings, 180); }
+    else { permNext = 'gallery'; openSettings(); }
+    return;
+  }
+  const sp = e.target.closest('[data-set-perm]');
+  if(sp){ setPerm(sp.dataset.setPerm); return; }
+  if(e.target.closest('[data-crumb]')){
+    // Back to Halo. If they turned access on, finish what they started.
+    const p = perm();
+    if(p === 'granted' || p === 'limited'){ stack.length = 0; show(settingsFrom, 'switch'); go(permNext); }
+    else show(settingsFrom, 'switch');
+    return;
+  }
+  const cell = e.target.closest('#photos .cell');
+  if(cell && photosEl.dataset.select === 'on'){
+    cell.setAttribute('aria-selected', cell.getAttribute('aria-selected') !== 'true');
+    paintSelect(); return;
+  }
+  if(e.target.closest('[data-cancel]')){
+    stack.length = 0;
+    go(document.body.dataset.origin === 'markup' ? 'markup' : 'photos');
+    return;
+  }
   if(e.target.closest('[data-sheet-close]')){
     const el = e.target.closest('[data-sheet-close]');
     if(el.dataset.entry) document.body.dataset.entry = el.dataset.entry;
@@ -977,7 +1272,14 @@ document.addEventListener('click', e => {
     return;
   }
   const g = e.target.closest('[data-go]');
-  if(g){ go(g.dataset.go); return; }
+  if(g){
+    // Gallery upload: its picks, plus anything already shared in if we came from Confirm.
+    if(g.closest('#gallery [data-block="cta"]'))
+      setCount((stack.includes('confirm') ? +document.body.dataset.count : 0) +
+        document.querySelectorAll('#gallery .cell[aria-selected="true"]').length);
+    else if(g.closest('#camera')) setCount(1);
+    go(g.dataset.go); return;
+  }
   if(e.target.closest('[data-back]')) back();
 });
 
@@ -1145,7 +1447,11 @@ function press(group, el){ document.querySelectorAll(group).forEach(o => o.setAt
 document.querySelectorAll('[data-fid]').forEach(b => b.onclick = () => {
   document.documentElement.dataset.fidelity = b.dataset.fid; press('[data-fid]', b);
 });
-document.querySelectorAll('[data-jump]').forEach(b => b.onclick = () => { stack.length = 0; show(b.dataset.jump,'switch'); });
+document.querySelectorAll('.devbar [data-perm]').forEach(b => b.onclick = () => setPerm(b.dataset.perm));
+setPerm('unknown');
+document.querySelectorAll('[data-jump]').forEach(b => b.onclick = () => {
+  stack.length = 0; setSelect(false); show(b.dataset.jump,'switch');
+});
 document.querySelectorAll('[data-st]').forEach(b => b.onclick = () => {
   const want = b.dataset.st;
   document.querySelectorAll('[data-state]').forEach(el => el.classList.toggle('on', el.dataset.state === want));
@@ -1192,6 +1498,12 @@ if(q.get('sheet'))            setTimeout(() => openSheet(q.get('sheet') === '1' 
 if(q.get('theme'))            document.documentElement.dataset.theme = q.get('theme');
 if(q.get('entry'))            document.body.dataset.entry = q.get('entry');
 if(q.get('first'))            document.body.dataset.first = q.get('first');
+if(q.get('origin'))           setOrigin(q.get('origin'), +(q.get('count') || 1));
+if(q.get('perm'))             setPerm(q.get('perm'));
+if(q.get('alert'))            setTimeout(() => askPhotos('home'), 30);
+if(q.get('select'))           { setSelect(true);
+  [...photosEl.querySelectorAll('.cell')].slice(0, +q.get('select')).forEach(c => c.setAttribute('aria-selected', 'true'));
+  paintSelect(); }
 if(q.get('fid'))  document.querySelector(`.devbar [data-fid="${q.get('fid')}"]`)?.click();
 if(q.get('state'))document.querySelector(`.devbar [data-st="${q.get('state')}"]`)?.click();
 if(q.get('res'))  document.querySelector(`.devbar [data-res="${q.get('res')}"]`)?.click();
